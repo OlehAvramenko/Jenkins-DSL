@@ -3,10 +3,11 @@ pipeline {
 
     environment {
       REGION = 'us-east-1'
-      REGISTRY = '427050172059.dkr.ecr.us-east-1.amazonaws.com/foxtrot'
+      REGISTRY = ''
       BUCKET = 'demo3-dependency-m2'
+      DB_NAME = 'foxtrot_petclinic'
       DB_USER = 'foxtrot'
-      DB_URL = 'petclinic-db.cqqvhzesbxmr.us-east-1.rds.amazonaws.com'
+      DB_URL = ''
       DB_PORT = '3306'
       CLUSTER = 'Foxtrot'
     }
@@ -23,6 +24,7 @@ pipeline {
                   credentialsId: 'avramenko',
                    url: 'ssh://git@main.gitlab.in.here.com:3389/avramenk/spring-petclinic.git'
               sh '''
+              #!/bin/bash
                   sudo chmod 666 /var/run/docker.sock
                   [ ! -d "${WORKSPACE}/.m2" ]  && mkdir -p ${WORKSPACE}/.m2
                   aws s3 sync  s3://${BUCKET}/.m2 ${WORKSPACE}/.m2/
@@ -31,6 +33,7 @@ pipeline {
                   '''
               echo "============== PUSH INTO REGISTRY ==========="
               sh '''
+              #!/bin/bash
                GIT_TAG=`git tag --points-at HEAD`
                [ -z "${GIT_TAG}" ] && TAG=${BUILD_NUMBER} || TAG=${GIT_TAG}_${BUILD_NUMBER}
                aws ecr get-login-password --region=${REGION} | docker login --username AWS --password-stdin ${REGISTRY}
@@ -48,7 +51,7 @@ pipeline {
                 steps {
                   echo "============ DEPLOY APP ============="
                   sh '''
-                    echo "===============Creating task definition============"
+                    echo "===============Creating task definition ============"
                     tee "fargate-task.json" > "/dev/null" <<EOF
                     {
                     "family": "${CLUSTER}-fargate",
@@ -75,7 +78,7 @@ pipeline {
                             "value": "${DB_PASS}"
                           },
                           {
-                            "name": "{MYSQL_URL}",
+                            "name": "MYSQL_URL",
                             "value": "jdbc:mysql://${DB_URL}:${DB_PORT}/${DB_NAME}"
                           }
                         ],
@@ -91,20 +94,21 @@ pipeline {
                     }
                 '''
                 sh '''
-                SERVICE=$(aws ecs list-services --region ${REGION} --cluster ${CLUSTER}| grep -c ${CLUSTER})
-                  if [[ $SERVICE -gt 0 ]]; then
-                    echo "Updating service"
-                    aws ecs update-service --region ${REGION} --cluster ${CLUSTER} --service ${CLUSTER} --force-new-deployment
-                  else
-                   echo "============ Registering task definition ==========="
-                   aws ecs register-task-definition --region ${REGION}  --cli-input-json file://fargate-task.json
-                   echo "==================Creating service ==============="
-                   REVISION=$(aws ecs describe-task-definition --region ${REGION} --task-definition ${CLUSTER}-fargate --query 'taskDefinition.revision')
-                   aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${CLUSTER} --task-definition ${CLUSTER}-fargate:"$REVISION" --desired-count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-45a4181c],securityGroups=[sg-031cad4dded62d028]}"
-                  fi
+                #!/bin/bash
+                SERVICE=$(aws ecs list-services --region ${REGION} --cluster ${CLUSTER}| grep ${CLUSTER}-service | wc -l)
+                if [ $SERVICE -ne 0 ]
+                then
+                  echo "Updating service"
+                  aws ecs update-service --region ${REGION} --cluster ${CLUSTER} --service ${CLUSTER}-service --force-new-deployment
+                else
+                  echo "============ Registering task definition ==========="
+                  aws ecs register-task-definition --region ${REGION}  --cli-input-json file://fargate-task.json
+                  echo "==================Creating service ==============="
+                  REVISION=$(aws ecs describe-task-definition --region ${REGION} --task-definition ${CLUSTER}-fargate --query 'taskDefinition.revision')
+                  aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${CLUSTER}-service --task-definition ${CLUSTER}-fargate:"${REVISION}" --desired-count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[],securityGroups=[]}"
+                fi
                   '''
                 }
-
-              }
+          }
     }
 }
