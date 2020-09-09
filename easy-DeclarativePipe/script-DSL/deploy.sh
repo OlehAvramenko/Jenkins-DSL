@@ -5,7 +5,7 @@ then
 echo "============ Updating service ============="
 aws ecs update-service --region ${REGION} --cluster ${CLUSTER} --service ${CLUSTER}-service --force-new-deployment
 else
-echo "============ Registering task definition ==========="
+echo "============ Registering task definition ============"
 # ============ CHANGE ENV ================
 sed -i -e "s/\${CLUSTER}/"${CLUSTER}"/g" script-DSL/fargate-task.json
 sed -i -e "s/\${REGISTRY}/"${REGISTRY}"/g" script-DSL/fargate-task.json
