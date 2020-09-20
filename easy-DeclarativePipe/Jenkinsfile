@@ -23,11 +23,11 @@ pipeline {
                   credentialsId: 'avramenko',
                    url: ''
               sh '''
-               chmod 777 script-DSL/build_app.sh && script-DSL/build_app.sh
+               chmod 777 scripts/build_app.sh && scripts/build_app.sh
                   '''
               echo "============== PUSH INTO REGISTRY ============"
               sh '''
-              chmod 777 script-DSL/push_registry.sh && script-DSL/push_registry.sh
+              chmod 777 scripts/push_registry.sh && scripts/push_registry.sh
                '''
                 }
               }
@@ -43,7 +43,7 @@ pipeline {
                      withCredentials([usernamePassword(credentialsId: 'Username-Password-Foxtrot', passwordVariable: 'DB_PASS', usernameVariable: 'DB_USER')])  {
                       sh '''
                       echo $DB_PASS
-                chmod 777 script-DSL/deploy.sh && script-DSL/deploy.sh
+                chmod 777 scripts/deploy.sh && scripts/deploy.sh
                   '''
                   }
                   }
