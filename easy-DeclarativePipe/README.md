@@ -1,1 +1,1 @@
-# Build and deploy app with Jenkins DSL
+# Build and deploy app with Jenkinsfile
