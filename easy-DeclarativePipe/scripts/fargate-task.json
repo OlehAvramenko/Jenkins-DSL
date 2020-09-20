@@ -1,0 +1,35 @@
+    {
+                    "family": "$CLUSTER-fargate",
+                    "executionRoleArn": "ecsTaskExecutionRole",
+                    "networkMode": "awsvpc",
+                    "containerDefinitions": [
+                      {
+                        "name": "$CLUSTER-petclinic",
+                        "image": "image:latest",
+                        "portMappings": [
+                          {
+                            "containerPort": 8080,
+                            "protocol": "tcp"
+                          }
+                        ],
+                        "essential": true,
+                        "environment": [
+                          {
+                            "name": "MYSQL_USER",
+                            "value": "$DB_USER"
+                          },
+                          {
+                            "name": "MYSQL_PASS",
+                            "value": "$DB_PASS"
+                          },
+                          {
+                            "name": "MYSQL_URL",
+                            "value": "jdbc:mysql://$DB_URL:$DB_PORT/$DB_NAME"
+                          }
+                        ]
+                      }
+                    ],
+                    "requiresCompatibilities": [ "FARGATE" ],
+                    "cpu": "1024",
+                    "memory": "2048"
+                    }
