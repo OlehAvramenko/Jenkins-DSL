@@ -6,7 +6,6 @@ pipeline {
       REGISTRY = ''
       BUCKET = ''
       DB_NAME = ''
-      DB_USER = ''
       DB_URL = ''
       DB_PORT = ''
       CLUSTER = ''
@@ -19,7 +18,7 @@ pipeline {
             label 'foxtrot_build'
           }
             steps {
-              echo "=========== BUILD APP ============"
+              echo "=========== BUILD APP ============="
                 git branch: 'main',
                   credentialsId: 'avramenko',
                    url: ''
@@ -41,10 +40,14 @@ pipeline {
                         credentialsId: 'avramenko',
                         url: ''
                   echo "============ DEPLOY APP ============="
-                sh '''
+                     withCredentials([usernamePassword(credentialsId: 'Username-Password-Foxtrot', passwordVariable: 'DB_PASS', usernameVariable: 'DB_USER')])  {
+                      sh '''
+                      echo $DB_PASS
                 chmod 777 script-DSL/deploy.sh && script-DSL/deploy.sh
                   '''
+                  }
+                  }
                 }
-          }
+              
     }
 }
