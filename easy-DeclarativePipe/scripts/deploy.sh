@@ -21,7 +21,7 @@ aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${
 fi
 
 sleep 120
-
+# ============================= HEALTH CHECKS ==============================
 ACTIVE_TASKS=$(aws ecs list-tasks --cluster ${CLUSTER} --region ${REGION} --service ${CLUSTER}-deploy | jq .taskArns[] | tr -d '"')
 
 APP_IP=$(aws ecs describe-tasks --tasks $ACTIVE_TASKS --cluster ${CLUSTER} --region ${REGION} --query "sort_by(tasks, &createdAt)[0]" | \
