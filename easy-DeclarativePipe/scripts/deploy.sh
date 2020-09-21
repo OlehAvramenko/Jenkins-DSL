@@ -14,7 +14,7 @@ sed -i -e "s/\$DB_PASS/${DB_PASS}/g" scripts/fargate-task.json
 sed -i -e "s/\$DB_URL/${DB_URL}/g"  scripts/fargate-task.json
 sed -i -e "s/\$DB_PORT/${DB_PORT}/g"  scripts/fargate-task.json
 
-aws ecs register-task-definition --region ${REGION}  --cli-input-json file://script-DSL/fargate-task.json
+aws ecs register-task-definition --region ${REGION}  --cli-input-json file://scripts/fargate-task.json
 echo "==================Creating service ================"
 REVISION=$(aws ecs describe-task-definition --region ${REGION} --task-definition ${CLUSTER}-fargate --query 'taskDefinition.revision')
 aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${CLUSTER}-service-DSL --task-definition ${CLUSTER}-fargate:"${REVISION}" --desired-count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-45a4181c],securityGroups=[sg-031cad4dded62d028]}"
