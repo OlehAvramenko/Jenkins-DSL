@@ -1,9 +1,9 @@
 #!/bin/bash
-SERVICE=$(aws ecs list-services --region ${REGION} --cluster ${CLUSTER}| grep ${CLUSTER}-service-DSL | wc -l)
+SERVICE=$(aws ecs list-services --region ${REGION} --cluster ${CLUSTER}| grep ${CLUSTER}-deploy  | wc -l)
 if [ $SERVICE -ne 0 ]
 then
 echo "============ Updating service ============="
-aws ecs update-service --region ${REGION} --cluster ${CLUSTER} --service ${CLUSTER}-service-DSL --force-new-deployment
+aws ecs update-service --region ${REGION} --cluster ${CLUSTER} --service ${CLUSTER}-deploy  --force-new-deployment
 else
 echo "============ Registering task definition ==========="
 # ============ CHANGE ENV ================
@@ -17,7 +17,7 @@ sed -i -e "s/\$DB_PORT/${DB_PORT}/g"  scripts/fargate-task.json
 aws ecs register-task-definition --region ${REGION}  --cli-input-json file://scripts/fargate-task.json
 echo "==================Creating service ================"
 REVISION=$(aws ecs describe-task-definition --region ${REGION} --task-definition ${CLUSTER}-fargate --query 'taskDefinition.revision')
-aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${CLUSTER}-service-DSL --task-definition ${CLUSTER}-fargate:"${REVISION}" --desired-count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-45a4181c],securityGroups=[sg-031cad4dded62d028]}"
+aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${CLUSTER}-deploy  --task-definition ${CLUSTER}-fargate:"${REVISION}" --desired-count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-45a4181c],securityGroups=[sg-031cad4dded62d028]}"
 fi
 
 sleep 120
