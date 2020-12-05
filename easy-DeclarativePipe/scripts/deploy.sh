@@ -17,7 +17,7 @@ sed -i -e "s/\$DB_PORT/${DB_PORT}/g"  scripts/fargate-task.json
 aws ecs register-task-definition --region ${REGION}  --cli-input-json file://scripts/fargate-task.json
 echo "==================Creating service ================"
 REVISION=$(aws ecs describe-task-definition --region ${REGION} --task-definition ${CLUSTER}-fargate --query 'taskDefinition.revision')
-aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${CLUSTER}-deploy  --task-definition ${CLUSTER}-fargate:"${REVISION}" --desired-count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[subnet-45a4181c],securityGroups=[sg-031cad4dded62d028]}"
+aws ecs create-service --region ${REGION} --cluster ${CLUSTER} --service-name ${CLUSTER}-deploy  --task-definition ${CLUSTER}-fargate:"${REVISION}" --desired-count 1 --launch-type "FARGATE" --network-configuration "awsvpcConfiguration={subnets=[${ID_SUBNET}],securityGroups=[${ID_SG}]}"
 fi
 
 sleep 120
@@ -54,5 +54,5 @@ cat > record-set.json <<EOF
 }}]
 }
 EOF
-aws route53 change-resource-record-sets --hosted-zone-id Z3ANYTCYP3WQQS --change-batch file://record-set.json
+aws route53 change-resource-record-sets --hosted-zone-id ${ZONE_ID} --change-batch file://record-set.json
 
